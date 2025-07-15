@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metamorphosis - The Ever-Changing Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header class="game-header">
+            <h1>Metamorphosis</h1>
+            <div class="game-info">
+                <div class="turn-counter">Turn: <span id="turn-number">1</span></div>
+                <div class="game-actions">
+                    <button id="save-game" class="action-btn">Save Game</button>
+                    <button id="reset-game" class="action-btn danger">Reset Game</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="turn-display" id="turn-display">
+            <div class="current-player" id="current-player">
+                <span class="player-indicator">Player 1's Turn</span>
+            </div>
+        </div>
+
+        <div class="transition-overlay" id="transition-overlay">
+            <div class="transition-content">
+                <h2 id="transition-message">Preparing Next Turn...</h2>
+                <div class="transition-spinner"></div>
+            </div>
+        </div>
+
+        <div class="game-board" id="game-board">
+            <div class="player-panels">
+                <div class="player-panel" id="player-1-panel">
+                    <h3>Player 1</h3>
+                    <div class="player-resources">
+                        <div class="resource">
+                            <span class="resource-label">Energy:</span>
+                            <span id="player-1-energy" class="resource-value">100</span>
+                        </div>
+                        <div class="resource">
+                            <span class="resource-label">Materials:</span>
+                            <span id="player-1-materials" class="resource-value">50</span>
+                        </div>
+                        <div class="resource">
+                            <span class="resource-label">Score:</span>
+                            <span id="player-1-score" class="resource-value">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="player-panel" id="player-2-panel">
+                    <h3>Player 2</h3>
+                    <div class="player-resources">
+                        <div class="resource">
+                            <span class="resource-label">Energy:</span>
+                            <span id="player-2-energy" class="resource-value">100</span>
+                        </div>
+                        <div class="resource">
+                            <span class="resource-label">Materials:</span>
+                            <span id="player-2-materials" class="resource-value">50</span>
+                        </div>
+                        <div class="resource">
+                            <span class="resource-label">Score:</span>
+                            <span id="player-2-score" class="resource-value">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-area">
+                <div class="action-panel" id="action-panel">
+                    <h3>Available Actions</h3>
+                    <div class="actions-grid">
+                        <button class="game-action-btn" id="gather-energy" data-action="gather-energy">
+                            Gather Energy<br>
+                            <small>Cost: 0 | Gain: 10 Energy</small>
+                        </button>
+                        <button class="game-action-btn" id="collect-materials" data-action="collect-materials">
+                            Collect Materials<br>
+                            <small>Cost: 5 Energy | Gain: 5 Materials</small>
+                        </button>
+                        <button class="game-action-btn" id="convert-to-score" data-action="convert-to-score">
+                            Convert to Score<br>
+                            <small>Cost: 10 Materials | Gain: 1 Score</small>
+                        </button>
+                        <button class="game-action-btn" id="end-turn" data-action="end-turn">
+                            End Turn
+                        </button>
+                    </div>
+                </div>
+
+                <div class="game-log" id="game-log">
+                    <h3>Game Log</h3>
+                    <div class="log-entries" id="log-entries">
+                        <div class="log-entry">Game started - Player 1's turn</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "storage-manager": "./storage-manager.js",
+            "player-manager": "./player-manager.js",
+            "turn-manager": "./turn-manager.js",
+            "resource-manager": "./resource-manager.js",
+            "action-manager": "./action-manager.js",
+            "ui-manager": "./ui-manager.js",
+            "game-state": "./game-state.js",
+            "game-engine": "./game-engine.js"
+        }
+    }
+    </script>
+    <script type="module" src="game-engine.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
+
