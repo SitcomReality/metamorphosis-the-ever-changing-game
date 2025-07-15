@@ -7,8 +7,7 @@ export class PlayerManager {
         const defaultResources = {
             energy: 100,
             materials: 50,
-            score: 0,
-            actionPoints: 5
+            score: 0
         };
         
         const playerData = {
@@ -74,3 +73,4 @@ export class PlayerManager {
         return players.sort((a, b) => b.score - a.score);
     }
 }
+

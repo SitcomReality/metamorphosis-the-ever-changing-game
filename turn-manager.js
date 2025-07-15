@@ -49,9 +49,6 @@ export class TurnManager {
     }
 
     enableGameActions() {
-        // Now handled by UIManager.updateActionButtons which is called on state change
-        // We can leave this empty or have it call the update logic
-        // For now, let's keep it simple. The UI will update itself on state change.
         document.querySelectorAll('.game-action-btn').forEach(btn => {
             btn.disabled = false;
         });
@@ -65,3 +62,4 @@ export class TurnManager {
         };
     }
 }
+

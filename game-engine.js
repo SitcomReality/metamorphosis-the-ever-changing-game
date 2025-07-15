@@ -15,7 +15,6 @@ class GameEngine {
         this.turnManager = new TurnManager(this.gameState);
         this.actionManager = new ActionManager(this.gameState, this.resourceManager);
         this.uiManager = new UIManager(this.gameState);
-        this.uiManager.actionManager = this.actionManager;
         
         this.initialize();
     }
@@ -77,7 +76,7 @@ class GameEngine {
         
         if (result.success) {
             this.uiManager.addLogEntry(result.message, `player-${currentPlayer.id}-action`);
-            // Notifying change is now handled inside executeAction or by turn change events
+            this.gameState.notifyChange();
         } else {
             this.uiManager.addLogEntry(`Error: ${result.message}`, 'system-message');
         }
@@ -118,3 +117,4 @@ class GameEngine {
 document.addEventListener('DOMContentLoaded', () => {
     window.gameEngine = new GameEngine();
 });
+

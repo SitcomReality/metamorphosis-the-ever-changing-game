@@ -1,10 +1,7 @@
-import { PlayerManager } from "./player-manager.js";
-
 export class ActionManager {
     constructor(gameState, resourceManager) {
         this.gameState = gameState;
-        this.resourceManager = resourceManager; // This might be redundant if we use PlayerManager
-        this.playerManager = new PlayerManager(gameState);
+        this.resourceManager = resourceManager;
         this.actions = this.initializeActions();
     }
 
@@ -13,30 +10,51 @@ export class ActionManager {
             'gather-energy': {
                 name: 'Gather Energy',
                 description: 'Collect energy from the environment',
-                cost: { actionPoints: 1 },
+                cost: {},
                 reward: { energy: 10 },
                 execute: (player) => {
-                    this.playerManager.givePlayerResources(player.id, { energy: 10 });
+                    if (player.ap <= 0) {
+                        return { success: false, message: 'No action points left' };
+                    }
+                    this.resourceManager.setPlayerResource(player.id, 'energy', 
+                        this.resourceManager.getPlayerResource(player.id, 'energy') + 10);
+                    this._spendAp(player.id, 1);
                     return { success: true, message: `Player ${player.id} gathered 10 energy` };
                 }
             },
             'collect-materials': {
                 name: 'Collect Materials',
                 description: 'Convert energy into materials',
-                cost: { energy: 5, actionPoints: 1 },
+                cost: { energy: 5 },
                 reward: { materials: 5 },
                 execute: (player) => {
-                    this.playerManager.givePlayerResources(player.id, { materials: 5 });
+                    if (player.ap <= 0) {
+                        return { success: false, message: 'No action points left' };
+                    }
+                    if (player.energy < 5) {
+                        return { success: false, message: 'Not enough energy' };
+                    }
+                    this.resourceManager.setPlayerResource(player.id, 'energy', player.energy - 5);
+                    this.resourceManager.setPlayerResource(player.id, 'materials', player.materials + 5);
+                    this._spendAp(player.id, 1);
                     return { success: true, message: `Player ${player.id} collected 5 materials` };
                 }
             },
             'convert-to-score': {
                 name: 'Convert to Score',
                 description: 'Convert materials into score points',
-                cost: { materials: 10, actionPoints: 1 },
+                cost: { materials: 10 },
                 reward: { score: 1 },
                 execute: (player) => {
-                    this.playerManager.givePlayerResources(player.id, { score: 1 });
+                    if (player.ap <= 0) {
+                        return { success: false, message: 'No action points left' };
+                    }
+                    if (player.materials < 10) {
+                        return { success: false, message: 'Not enough materials' };
+                    }
+                    this.resourceManager.setPlayerResource(player.id, 'materials', player.materials - 10);
+                    this.resourceManager.setPlayerResource(player.id, 'score', player.score + 1);
+                    this._spendAp(player.id, 1);
                     return { success: true, message: `Player ${player.id} converted materials to score` };
                 }
             },
@@ -46,11 +64,19 @@ export class ActionManager {
                 cost: {},
                 reward: {},
                 execute: (player) => {
+                    // nothing happens to AP here
                     this.gameState.nextTurn();
-                    return { success: true, message: `Player ${player.id} ended their turn`, skipCost: true };
+                    return { success: true, message: `Player ${player.id} ended their turn` };
                 }
             }
         };
+    }
+
+    _spendAp(playerId, amount) {
+        const player = this.gameState.getPlayer(playerId);
+        if (player && typeof player.ap === 'number' && player.ap > 0) {
+            this.gameState.updatePlayerResource(playerId, 'ap', -amount);
+        }
     }
 
     executeAction(actionName, player) {
@@ -59,24 +85,12 @@ export class ActionManager {
             return { success: false, message: 'Unknown action' };
         }
 
-        if (!this.canPlayerPerformAction(player, actionName)) {
-            return { success: false, message: 'Cannot afford action' };
+        // Only "end turn" should be allowed with 0 AP; others require AP>0.
+        if (actionName !== 'end-turn' && player.ap <= 0) {
+            return { success: false, message: 'No action points left' };
         }
 
-        // Charge player for action, unless skipped
-        if (!action.execute.toString().includes('skipCost: true')) { // A bit of a hack, but works for the current setup
-             if(!this.playerManager.chargePlayer(player.id, action.cost)) {
-                 return { success: false, message: 'Could not charge player for action' };
-             }
-        }
-        
-        if (actionName === 'end-turn') {
-            return action.execute(player);
-        }
-
-        const result = action.execute(player);
-        this.gameState.notifyChange(); // Manually notify for actions that don't change turns
-        return result;
+        return action.execute(player);
     }
 
     getAction(actionName) {
@@ -104,6 +118,10 @@ export class ActionManager {
             if (player[resource] < cost) {
                 return false;
             }
+        }
+        // For all actions except end-turn, require AP > 0
+        if (actionName !== 'end-turn' && player.ap <= 0) {
+            return false;
         }
 
         return true;

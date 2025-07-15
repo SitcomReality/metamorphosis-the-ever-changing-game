@@ -2,15 +2,12 @@ export class UIManager {
     constructor(gameState) {
         this.gameState = gameState;
         this.elements = this.initializeElements();
-        this.actionManager = null; // To be set by GameEngine
     }
 
     initializeElements() {
         return {
             turnNumber: document.getElementById('turn-number'),
             currentPlayer: document.getElementById('current-player'),
-            player1AP: document.getElementById('player-1-ap'),
-            player2AP: document.getElementById('player-2-ap'),
             transitionOverlay: document.getElementById('transition-overlay'),
             transitionMessage: document.getElementById('transition-message'),
             logEntries: document.getElementById('log-entries'),
@@ -21,7 +18,9 @@ export class UIManager {
             player1Score: document.getElementById('player-1-score'),
             player2Energy: document.getElementById('player-2-energy'),
             player2Materials: document.getElementById('player-2-materials'),
-            player2Score: document.getElementById('player-2-score')
+            player2Score: document.getElementById('player-2-score'),
+            player1ApPips: document.getElementById('player-1-ap-pips'),
+            player2ApPips: document.getElementById('player-2-ap-pips')
         };
     }
 
@@ -30,7 +29,7 @@ export class UIManager {
         this.updatePlayerPanels();
         this.updatePlayerResources();
         this.updateActionButtons();
-        this.updateActionPoints();
+        this.updateApPips();
     }
 
     updateTurnDisplay() {
@@ -69,42 +68,59 @@ export class UIManager {
         }
     }
 
-    updateActionPoints() {
-        const player1 = this.gameState.getPlayer(1);
-        const player2 = this.gameState.getPlayer(2);
-        const currentPlayerId = this.gameState.getCurrentPlayerId();
+    updateActionButtons() {
+        const currentPlayer = this.gameState.getCurrentPlayer();
+        
+        // Update button states based on player resources & AP
+        const gatherEnergyBtn = document.getElementById('gather-energy');
+        const collectMaterialsBtn = document.getElementById('collect-materials');
+        const convertToScoreBtn = document.getElementById('convert-to-score');
+        const endTurnBtn = document.getElementById('end-turn');
 
-        const renderPips = (container, player, isActive) => {
-            container.innerHTML = '';
-            for (let i = 0; i < 5; i++) {
-                const pip = document.createElement('div');
-                const state = i < player.actionPoints ? 'active' : 'inactive';
-                const activeClass = isActive ? state : 'inactive';
-                pip.className = `ap-pip player-${player.id} ${activeClass}`;
-                container.appendChild(pip);
-            }
-        };
-
-        if (player1) {
-            renderPips(this.elements.player1AP, player1, currentPlayerId === 1);
+        // All action buttons except end-turn require AP>0
+        const canDoAction = currentPlayer.ap > 0;
+        
+        if (gatherEnergyBtn) {
+            gatherEnergyBtn.disabled = !canDoAction;
         }
-        if (player2) {
-            renderPips(this.elements.player2AP, player2, currentPlayerId === 2);
+        
+        if (collectMaterialsBtn) {
+            collectMaterialsBtn.disabled = !(canDoAction && currentPlayer.energy >= 5);
+        }
+        
+        if (convertToScoreBtn) {
+            convertToScoreBtn.disabled = !(canDoAction && currentPlayer.materials >= 10);
+        }
+
+        if (endTurnBtn) {
+            endTurnBtn.disabled = false;
         }
     }
 
-    updateActionButtons() {
-        if (!this.actionManager) return;
-
+    // Draw pips for both players - faded for inactive, colored for active, spent AP indicate via dim color
+    updateApPips() {
+        const p1 = this.gameState.getPlayer(1);
+        const p2 = this.gameState.getPlayer(2);
         const currentPlayer = this.gameState.getCurrentPlayer();
-        const actionButtons = document.querySelectorAll('.game-action-btn');
-        
-        actionButtons.forEach(btn => {
-            const actionName = btn.dataset.action;
-            if (actionName) {
-                btn.disabled = !this.actionManager.canPlayerPerformAction(currentPlayer, actionName);
+        const isP1 = currentPlayer.id === 1;
+
+        this.elements.player1ApPips.innerHTML = this._drawPips(p1.ap, isP1);
+        this.elements.player2ApPips.innerHTML = this._drawPips(p2.ap, !isP1);
+    }
+
+    _drawPips(ap, active) {
+        const pips = [];
+        for (let i = 0; i < 5; ++i) {
+            let classes = "ap-pip";
+            if (!active) {
+                classes += " inactive";
             }
-        });
+            if (i >= ap) {
+                classes += " spent";
+            }
+            pips.push(`<span class="${classes}"></span>`);
+        }
+        return pips.join("");
     }
 
     addLogEntry(message, className = '') {
