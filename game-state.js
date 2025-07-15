@@ -4,8 +4,8 @@ export class GameState {
             currentPlayer: 1,
             turnNumber: 1,
             players: {
-                1: { id: 1, energy: 100, materials: 50, score: 0 },
-                2: { id: 2, energy: 100, materials: 50, score: 0 }
+                1: { id: 1, energy: 100, materials: 50, score: 0, actionPoints: 5 },
+                2: { id: 2, energy: 100, materials: 50, score: 0, actionPoints: 5 }
             },
             gameSettings: {
                 maxPlayers: 2,
@@ -22,8 +22,8 @@ export class GameState {
             currentPlayer: 1,
             turnNumber: 1,
             players: {
-                1: { id: 1, energy: 100, materials: 50, score: 0 },
-                2: { id: 2, energy: 100, materials: 50, score: 0 }
+                1: { id: 1, energy: 100, materials: 50, score: 0, actionPoints: 5 },
+                2: { id: 2, energy: 100, materials: 50, score: 0, actionPoints: 5 }
             },
             gameSettings: {
                 maxPlayers: 2,
@@ -59,6 +59,7 @@ export class GameState {
         if (this.state.currentPlayer === 1) {
             this.state.turnNumber++;
         }
+        this.state.players[this.state.currentPlayer].actionPoints = 5;
         this.notify('turnChanged');
         this.notifyChange();
     }
@@ -113,4 +114,3 @@ export class GameState {
         this.notify('stateChanged');
     }
 }
-

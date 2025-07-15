@@ -2,12 +2,15 @@ export class UIManager {
     constructor(gameState) {
         this.gameState = gameState;
         this.elements = this.initializeElements();
+        this.actionManager = null; // To be set by GameEngine
     }
 
     initializeElements() {
         return {
             turnNumber: document.getElementById('turn-number'),
             currentPlayer: document.getElementById('current-player'),
+            player1AP: document.getElementById('player-1-ap'),
+            player2AP: document.getElementById('player-2-ap'),
             transitionOverlay: document.getElementById('transition-overlay'),
             transitionMessage: document.getElementById('transition-message'),
             logEntries: document.getElementById('log-entries'),
@@ -27,6 +30,7 @@ export class UIManager {
         this.updatePlayerPanels();
         this.updatePlayerResources();
         this.updateActionButtons();
+        this.updateActionPoints();
     }
 
     updateTurnDisplay() {
@@ -65,25 +69,42 @@ export class UIManager {
         }
     }
 
+    updateActionPoints() {
+        const player1 = this.gameState.getPlayer(1);
+        const player2 = this.gameState.getPlayer(2);
+        const currentPlayerId = this.gameState.getCurrentPlayerId();
+
+        const renderPips = (container, player, isActive) => {
+            container.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const pip = document.createElement('div');
+                const state = i < player.actionPoints ? 'active' : 'inactive';
+                const activeClass = isActive ? state : 'inactive';
+                pip.className = `ap-pip player-${player.id} ${activeClass}`;
+                container.appendChild(pip);
+            }
+        };
+
+        if (player1) {
+            renderPips(this.elements.player1AP, player1, currentPlayerId === 1);
+        }
+        if (player2) {
+            renderPips(this.elements.player2AP, player2, currentPlayerId === 2);
+        }
+    }
+
     updateActionButtons() {
+        if (!this.actionManager) return;
+
         const currentPlayer = this.gameState.getCurrentPlayer();
+        const actionButtons = document.querySelectorAll('.game-action-btn');
         
-        // Update button states based on player resources
-        const gatherEnergyBtn = document.getElementById('gather-energy');
-        const collectMaterialsBtn = document.getElementById('collect-materials');
-        const convertToScoreBtn = document.getElementById('convert-to-score');
-        
-        if (gatherEnergyBtn) {
-            gatherEnergyBtn.disabled = false;
-        }
-        
-        if (collectMaterialsBtn) {
-            collectMaterialsBtn.disabled = currentPlayer.energy < 5;
-        }
-        
-        if (convertToScoreBtn) {
-            convertToScoreBtn.disabled = currentPlayer.materials < 10;
-        }
+        actionButtons.forEach(btn => {
+            const actionName = btn.dataset.action;
+            if (actionName) {
+                btn.disabled = !this.actionManager.canPlayerPerformAction(currentPlayer, actionName);
+            }
+        });
     }
 
     addLogEntry(message, className = '') {
@@ -118,4 +139,3 @@ export class UIManager {
         }
     }
 }
-

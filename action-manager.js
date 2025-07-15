@@ -1,7 +1,10 @@
+import { PlayerManager } from "./player-manager.js";
+
 export class ActionManager {
     constructor(gameState, resourceManager) {
         this.gameState = gameState;
-        this.resourceManager = resourceManager;
+        this.resourceManager = resourceManager; // This might be redundant if we use PlayerManager
+        this.playerManager = new PlayerManager(gameState);
         this.actions = this.initializeActions();
     }
 
@@ -10,39 +13,30 @@ export class ActionManager {
             'gather-energy': {
                 name: 'Gather Energy',
                 description: 'Collect energy from the environment',
-                cost: {},
+                cost: { actionPoints: 1 },
                 reward: { energy: 10 },
                 execute: (player) => {
-                    this.resourceManager.setPlayerResource(player.id, 'energy', 
-                        this.resourceManager.getPlayerResource(player.id, 'energy') + 10);
+                    this.playerManager.givePlayerResources(player.id, { energy: 10 });
                     return { success: true, message: `Player ${player.id} gathered 10 energy` };
                 }
             },
             'collect-materials': {
                 name: 'Collect Materials',
                 description: 'Convert energy into materials',
-                cost: { energy: 5 },
+                cost: { energy: 5, actionPoints: 1 },
                 reward: { materials: 5 },
                 execute: (player) => {
-                    if (player.energy < 5) {
-                        return { success: false, message: 'Not enough energy' };
-                    }
-                    this.resourceManager.setPlayerResource(player.id, 'energy', player.energy - 5);
-                    this.resourceManager.setPlayerResource(player.id, 'materials', player.materials + 5);
+                    this.playerManager.givePlayerResources(player.id, { materials: 5 });
                     return { success: true, message: `Player ${player.id} collected 5 materials` };
                 }
             },
             'convert-to-score': {
                 name: 'Convert to Score',
                 description: 'Convert materials into score points',
-                cost: { materials: 10 },
+                cost: { materials: 10, actionPoints: 1 },
                 reward: { score: 1 },
                 execute: (player) => {
-                    if (player.materials < 10) {
-                        return { success: false, message: 'Not enough materials' };
-                    }
-                    this.resourceManager.setPlayerResource(player.id, 'materials', player.materials - 10);
-                    this.resourceManager.setPlayerResource(player.id, 'score', player.score + 1);
+                    this.playerManager.givePlayerResources(player.id, { score: 1 });
                     return { success: true, message: `Player ${player.id} converted materials to score` };
                 }
             },
@@ -53,7 +47,7 @@ export class ActionManager {
                 reward: {},
                 execute: (player) => {
                     this.gameState.nextTurn();
-                    return { success: true, message: `Player ${player.id} ended their turn` };
+                    return { success: true, message: `Player ${player.id} ended their turn`, skipCost: true };
                 }
             }
         };
@@ -65,7 +59,24 @@ export class ActionManager {
             return { success: false, message: 'Unknown action' };
         }
 
-        return action.execute(player);
+        if (!this.canPlayerPerformAction(player, actionName)) {
+            return { success: false, message: 'Cannot afford action' };
+        }
+
+        // Charge player for action, unless skipped
+        if (!action.execute.toString().includes('skipCost: true')) { // A bit of a hack, but works for the current setup
+             if(!this.playerManager.chargePlayer(player.id, action.cost)) {
+                 return { success: false, message: 'Could not charge player for action' };
+             }
+        }
+        
+        if (actionName === 'end-turn') {
+            return action.execute(player);
+        }
+
+        const result = action.execute(player);
+        this.gameState.notifyChange(); // Manually notify for actions that don't change turns
+        return result;
     }
 
     getAction(actionName) {
@@ -98,4 +109,3 @@ export class ActionManager {
         return true;
     }
 }
-
